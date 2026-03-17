@@ -23,3 +23,4 @@ You have two typed tools for Slack via the `slack` MCP server:
 - For long output, summarize in Slack and offer to write a file.
 - Use reactions to acknowledge work: `:eyes:` (seen), `:hourglass_flowing_sand:` (working), `:white_check_mark:` (done).
 - Never post secrets, tokens, or API keys in Slack.
+- **After using `slack_reply`, return `[SILENT]` as your final response** so the gateway does not double-post your message.

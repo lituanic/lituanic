@@ -48,7 +48,7 @@ export function wireSlack(app: App, handler: MessageHandler) {
       {
         source: "slack",
         channelId: event.channel,
-        threadTs: event.ts,
+        threadTs: ("thread_ts" in event ? event.thread_ts : undefined) ?? event.ts,
         userId: event.user,
         text: event.text,
         raw: event,
@@ -61,12 +61,13 @@ export function wireSlack(app: App, handler: MessageHandler) {
   app.event("message", async ({ event }) => {
     if (event.channel_type !== "im") return;
     if ("subtype" in event && event.subtype) return;
+    if ("bot_id" in event && event.bot_id) return;
 
     await enqueue(
       {
         source: "slack",
         channelId: event.channel,
-        threadTs: event.ts,
+        threadTs: ("thread_ts" in event ? (event.thread_ts as string) : undefined) ?? event.ts,
         userId: "user" in event ? (event.user as string) : undefined,
         text: "text" in event ? (event.text as string) : "",
         raw: event,

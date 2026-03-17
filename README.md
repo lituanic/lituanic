@@ -29,6 +29,24 @@ Slack is the only typed MCP tool because mistakes are visible to humans. The oth
 
 Adding an integration = writing one SKILL.md file + adding env checks to `doctor.ts`.
 
+## Slack app setup
+
+Create a Slack app at [api.slack.com/apps](https://api.slack.com/apps):
+
+1. **Create New App** → From scratch → pick your workspace
+2. **Socket Mode** → Enable Socket Mode → generate an app-level token with `connections:write` scope → save as `SLACK_APP_TOKEN` (starts with `xapp-`)
+3. **OAuth & Permissions** → add Bot Token Scopes:
+   - `app_mentions:read` — receive @mentions
+   - `chat:write` — send messages
+   - `im:history` — read DM history
+   - `im:read` — open DMs
+   - `reactions:write` — add emoji reactions
+4. **Event Subscriptions** → Enable Events → Subscribe to bot events:
+   - `app_mention` — triggers on @mentions in channels
+   - `message.im` — triggers on direct messages
+5. **Install to Workspace** → copy Bot User OAuth Token → save as `SLACK_BOT_TOKEN` (starts with `xoxb-`)
+6. **App Home** → enable "Messages Tab" so users can DM the bot
+
 ## Quick start
 
 ```bash

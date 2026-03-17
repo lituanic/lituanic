@@ -47,6 +47,9 @@ export function createDaemon(config: LituanicConfig): LituanicDaemon {
     lastEvent = new Date().toISOString();
     activeSessions++;
 
+    const preview = event.text.slice(0, 80).replace(/\n/g, " ");
+    console.log(`[lituanic] ← ${event.source} #${event.channelId ?? "?"}: ${preview}`);
+
     // Typing indicator
     let typingTs: string | undefined;
     if (slackApp && event.channelId) {
@@ -91,13 +94,20 @@ export function createDaemon(config: LituanicConfig): LituanicDaemon {
         try { await slackApp.client.chat.delete({ channel: event.channelId, ts: typingTs }); } catch {}
       }
 
+      const costStr = result.costUsd !== undefined ? ` $${result.costUsd.toFixed(4)}` : "";
+      console.log(`[lituanic] → ${result.turns ?? "?"}t ${result.stopReason ?? ""}${costStr}: ${result.response.slice(0, 80).replace(/\n/g, " ")}`);
+
       if (slackApp && event.channelId && result.response) {
         if (result.response.startsWith("[SILENT]")) return;
+        const MAX_SLACK_LENGTH = 3900;
+        let text = result.response;
+        if (text.length > MAX_SLACK_LENGTH) {
+          text = text.slice(0, MAX_SLACK_LENGTH) + `\n\n_(truncated — full response was ${result.response.length} chars)_`;
+        }
         await slackApp.client.chat.postMessage({
           channel: event.channelId,
           thread_ts: event.threadTs,
-          text: result.response,
-          blocks: [{ type: "markdown", text: result.response }],
+          text,
         });
       }
     } catch (err) {
