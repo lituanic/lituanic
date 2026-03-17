@@ -57,6 +57,19 @@ export async function doctor(): Promise<Check[]> {
     detail: hasOp ? "Installed" : "Not found — install: https://1password.com/downloads/cli",
   });
 
+  // GitHub
+  const hasGh = cmd("gh --version");
+  checks.push({
+    name: "gh CLI",
+    status: hasGh ? "ok" : "warn",
+    detail: hasGh ? "Installed" : "Not found — install: https://cli.github.com",
+  });
+  checks.push({
+    name: "GH_TOKEN",
+    status: env("GH_TOKEN") || env("GITHUB_TOKEN") ? "ok" : "warn",
+    detail: env("GH_TOKEN") || env("GITHUB_TOKEN") ? "Set" : "Missing — GitHub integration disabled",
+  });
+
   // Browser
   const hasBrowser = cmd("agent-browser --version");
   checks.push({

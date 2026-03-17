@@ -102,7 +102,7 @@ export function init(name: string) {
   const packageSkillsDir = join(import.meta.dir, "..", ".claude", "skills");
   if (existsSync(packageSkillsDir)) {
     cpSync(packageSkillsDir, join(projectDir, ".claude", "skills"), { recursive: true });
-    console.log("  copied .claude/skills/ (slack, linear, op, gws, browser)");
+    console.log("  copied .claude/skills/ (slack, linear, op, gws, browser, github)");
   }
 
   // Write agent identity

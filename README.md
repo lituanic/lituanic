@@ -12,7 +12,7 @@ This is what smart contracts promised — code-first, zero-human operations. Lit
 
 Lituanic is a thin wiring layer on the Claude Agent SDK. The SDK does all the hard work — agent loop, tool calling, sessions, compaction, subagents, sandboxing. Lituanic wires it to Slack and adds opinionated defaults. When Anthropic ships an SDK update, Lituanic gets better for free.
 
-**~1,300 lines of TypeScript. 5 built-in integrations. 3 dependencies.**
+**~1,300 lines of TypeScript. 6 built-in integrations. 3 dependencies.**
 
 ## Built-in integrations
 
@@ -23,8 +23,9 @@ Lituanic is a thin wiring layer on the Claude Agent SDK. The SDK does all the ha
 | **1Password** | SKILL.md + `op` CLI via Bash | `OP_SERVICE_ACCOUNT_TOKEN` |
 | **Google Workspace** | SKILL.md + `gws` CLI via Bash | `GWS_CLIENT_ID` + credentials |
 | **Browser** | SKILL.md + `agent-browser` CLI via Bash | None (optional: `KERNEL_API_KEY`) |
+| **GitHub** | SKILL.md + `gh` CLI via Bash | `GH_TOKEN` |
 
-Slack is the only typed MCP tool because mistakes are visible to humans. Linear uses its GraphQL API via curl (no CLI exists). 1Password, GWS, and Browser use their respective CLI tools. The agent uses all of these via Bash, which the SDK provides for free.
+Slack is the only typed MCP tool because mistakes are visible to humans. The other 5 use CLI tools or APIs via Bash, which the SDK provides for free.
 
 Adding an integration = writing one SKILL.md file + adding env checks to `doctor.ts`.
 
@@ -133,7 +134,8 @@ No code change. No restart. The agent immediately knows how to deploy.
 │  ├── linear/SKILL.md               │ • Cost tracking       │ │
 │  ├── op/SKILL.md                   └──────────────────────┘ │
 │  ├── gws/SKILL.md                                           │
-│  └── browser/SKILL.md                                       │
+│  ├── browser/SKILL.md                                       │
+│  └── github/SKILL.md                                        │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -190,6 +192,7 @@ Linear                                           ✓ GraphQL API via curl
 1Password                                        ✓ op CLI
 Google Workspace                                 ✓ gws CLI
 Browser                                          ✓ agent-browser CLI
+GitHub                                           ✓ gh CLI
 ```
 
 **Why Slack gets typed tools:** wrong-channel prevention, thread enforcement, Slack markdown formatting. Mistakes are immediately visible to humans.
@@ -238,7 +241,8 @@ Skills are SKILL.md files in `.claude/skills/`. The SDK loads them via `settingS
 ├── linear/SKILL.md      # CLI commands, workpad pattern, autonomous work
 ├── op/SKILL.md          # Secret reading, security rules, patterns
 ├── gws/SKILL.md         # Email, calendar, drive commands
-└── browser/SKILL.md     # Web browsing, screenshots, form filling
+├── browser/SKILL.md     # Web browsing, screenshots, form filling
+└── github/SKILL.md      # PRs, issues, CI, releases
 ```
 
 Add your own:
@@ -342,7 +346,7 @@ Health check built in: `GET :9200/health` returns JSON.
 
 | | OpenClaw | Lituanic |
 |---|---|---|
-| Scope | 20+ channels, 5400+ skills, voice, canvas | Slack + 4 integrations |
+| Scope | 20+ channels, 5400+ skills, voice, canvas | Slack + 6 built-in skills |
 | Codebase | 19,800+ commits | ~1,000 LOC |
 | Security | 500+ open issues | Minimal surface, single tenant |
 | Design | Everything for everyone | One founder, one company |
