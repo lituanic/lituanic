@@ -1,6 +1,6 @@
 {
   "name": "lituanic",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "AI coworker for solo founders. Picks up Linear issues, writes code, sends email, and reports back to Slack.",
   "type": "module",
   "main": "src/index.ts",

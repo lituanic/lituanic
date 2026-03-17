@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.2] - 2026-03-17
+
+### Added
+- Markdown → Slack mrkdwn conversion: `**bold**` → `*bold*`, `[text](url)` → `<url|text>`, `# Heading` → `*Heading*`. Responses now render correctly in Slack instead of showing raw markdown.
+- `mrkdwn: true` flag on all `chat.postMessage` calls.
+- Tool call logging to terminal: each tool the agent uses prints `↳ ToolName: preview` so you can follow along locally.
+
 ## [0.1.1] - 2026-03-17
 
 ### Fixed
