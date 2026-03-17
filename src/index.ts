@@ -47,6 +47,9 @@ export function createDaemon(config: LituanicConfig): LituanicDaemon {
     lastEvent = new Date().toISOString();
     activeSessions++;
 
+    const preview = event.text.slice(0, 80).replace(/\n/g, " ");
+    console.log(`[lituanic] ← ${event.source} #${event.channelId ?? "?"}: ${preview}`);
+
     // Typing indicator
     let typingTs: string | undefined;
     if (slackApp && event.channelId) {
@@ -90,6 +93,9 @@ export function createDaemon(config: LituanicConfig): LituanicDaemon {
       if (slackApp && event.channelId && typingTs) {
         try { await slackApp.client.chat.delete({ channel: event.channelId, ts: typingTs }); } catch {}
       }
+
+      const costStr = result.costUsd !== undefined ? ` $${result.costUsd.toFixed(4)}` : "";
+      console.log(`[lituanic] → ${result.turns ?? "?"}t ${result.stopReason ?? ""}${costStr}: ${result.response.slice(0, 80).replace(/\n/g, " ")}`);
 
       if (slackApp && event.channelId && result.response) {
         if (result.response.startsWith("[SILENT]")) return;
