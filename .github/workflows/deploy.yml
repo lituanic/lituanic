@@ -1,17 +1,16 @@
 name: Deploy
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
-    paths:
-      - "src/**"
-      - "package.json"
-      - "bun.lock"
-      - ".env.op"
-      - "lituanic.config.ts"
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    if: >-
+      github.repository == vars.DEPLOY_REPO &&
+      github.event.workflow_run.conclusion == 'success'
     steps:
       - run: |
           ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "
