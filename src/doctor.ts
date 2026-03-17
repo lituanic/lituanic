@@ -57,6 +57,14 @@ export async function doctor(): Promise<Check[]> {
     detail: hasOp ? "Installed" : "Not found — install: https://1password.com/downloads/cli",
   });
 
+  // Browser
+  const hasBrowser = cmd("agent-browser --version");
+  checks.push({
+    name: "agent-browser CLI",
+    status: hasBrowser ? "ok" : "warn",
+    detail: hasBrowser ? "Installed" : "Not found — install: npm i -g agent-browser && agent-browser install",
+  });
+
   // Google Workspace
   const hasGws = cmd("gws --version");
   checks.push({

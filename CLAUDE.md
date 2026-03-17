@@ -2,7 +2,7 @@
 
 AI coworker for solo founders. Thin wiring layer on the Claude Agent SDK.
 
-Ships with 4 built-in integrations: Slack, Linear, 1Password, Google Workspace.
+Ships with 5 built-in integrations: Slack, Linear, 1Password, Google Workspace, Browser.
 
 ## Commit convention
 
@@ -49,6 +49,7 @@ Adding an integration = writing a SKILL.md + checking env vars in doctor.ts.
 | Linear | SKILL.md + GraphQL API via curl | `LINEAR_API_KEY` |
 | 1Password | SKILL.md + `op` CLI via Bash | `OP_SERVICE_ACCOUNT_TOKEN` |
 | Google Workspace | SKILL.md + `gws` CLI via Bash | `GWS_CLIENT_ID`, GWS credentials |
+| Browser | SKILL.md + `agent-browser` CLI via Bash | None (optional: `KERNEL_API_KEY` for cloud) |
 
 ## Directory layout
 
@@ -59,7 +60,8 @@ CLAUDE.md                  # This file (loaded by SDK at project root)
 │   ├── slack/SKILL.md
 │   ├── linear/SKILL.md
 │   ├── op/SKILL.md
-│   └── gws/SKILL.md
+│   ├── gws/SKILL.md
+│   └── browser/SKILL.md
 
 data/
 ├── memory/MEMORY.md       # Daily logs (runtime)
