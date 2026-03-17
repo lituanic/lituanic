@@ -13,7 +13,7 @@ const ScheduleEntrySchema = z.object({
 });
 
 export const ConfigSchema = z.object({
-  name: z.string().default("lituanic"),
+  name: z.string().default("Mindaugas"),
   model: z.string().default("claude-sonnet-4-6"),
   fallbackModel: z.string().default("claude-haiku-4-5"),
   cwd: z.string().optional(),
