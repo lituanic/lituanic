@@ -1,6 +1,6 @@
 # Lituanic
 
-Agent daemon for single operators. One founder, one agent, one company.
+AI coworker for solo founders. Picks up Linear issues, writes code, sends email, and reports back to Slack — autonomously.
 
 Named after the 1933 transatlantic flight by Steponas Darius and Stasys Girenas — two people, one plane, crossing the Atlantic with what they had.
 
@@ -10,9 +10,9 @@ Most agent frameworks build orchestration for teams of humans managing fleets of
 
 This is what smart contracts promised — code-first, zero-human operations. Lituanic delivers it with LLMs: an AI coworker that manages projects, writes code, ships products, handles email, and reports back to Slack.
 
-Lituanic is a **parasite on the Claude Agent SDK.** The SDK does all the hard work — agent loop, tool calling, sessions, compaction, subagents, sandboxing. Lituanic wires it to Slack and adds opinionated defaults. When Anthropic ships an SDK update, Lituanic gets better for free.
+Lituanic is a thin wiring layer on the Claude Agent SDK. The SDK does all the hard work — agent loop, tool calling, sessions, compaction, subagents, sandboxing. Lituanic wires it to Slack and adds opinionated defaults. When Anthropic ships an SDK update, Lituanic gets better for free.
 
-**~1,000 lines of TypeScript. 4 built-in integrations. 3 dependencies.**
+**~1,300 lines of TypeScript. 4 built-in integrations. 3 dependencies.**
 
 ## Built-in integrations
 

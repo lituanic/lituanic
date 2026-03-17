@@ -57,7 +57,7 @@ async function main() {
 
     default: {
       console.log(`
-lituanic v${pkg.version} — agent daemon for single operators
+lituanic v${pkg.version} — AI coworker for solo founders
 
 Usage:
   lituanic init [name]      Scaffold a new agent project (or "." for current dir)

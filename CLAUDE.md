@@ -1,6 +1,6 @@
 # Lituanic
 
-Thin wiring layer on the Claude Agent SDK. Single-operator agent daemon.
+AI coworker for solo founders. Thin wiring layer on the Claude Agent SDK.
 
 Ships with 4 built-in integrations: Slack, Linear, 1Password, Google Workspace.
 
