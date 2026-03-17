@@ -1,6 +1,6 @@
 {
   "name": "lituanic",
-  "version": "1.009.0",
+  "version": "0.1.0",
   "description": "AI coworker for solo founders. Picks up Linear issues, writes code, sends email, and reports back to Slack.",
   "type": "module",
   "main": "src/index.ts",
@@ -40,6 +40,13 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/lituanic/lituanic.git"
+  },
+  "engines": {
+    "bun": ">=1.2"
+  },
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
   },
   "homepage": "https://lituanic.com",
   "trustedDependencies": [],
