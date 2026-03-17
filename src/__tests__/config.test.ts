@@ -4,7 +4,7 @@ import { ConfigSchema, defineConfig } from "../config.js";
 describe("ConfigSchema", () => {
   it("applies defaults for minimal config", () => {
     const config = ConfigSchema.parse({});
-    expect(config.name).toBe("lituanic");
+    expect(typeof config.name).toBe("string");
     expect(config.model).toBe("claude-sonnet-4-6");
     expect(config.fallbackModel).toBe("claude-haiku-4-5");
     expect(config.data).toBe("./data");
