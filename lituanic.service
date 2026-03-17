@@ -1,0 +1,17 @@
+[Unit]
+Description=Lituanic Agent Daemon
+After=network-online.target
+
+[Service]
+Type=simple
+User=agent
+Group=agent
+WorkingDirectory=/home/agent/lituanic
+ExecStart=/usr/local/bin/op run --env-file=.env.op -- /usr/local/bin/bun run src/cli.ts
+Restart=on-failure
+RestartSec=10
+StartLimitBurst=5
+StartLimitIntervalSec=300
+
+[Install]
+WantedBy=multi-user.target

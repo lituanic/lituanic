@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+.env.op
+*.log
+package-lock.json
+
+# Daily logs (runtime, not tracked)
+data/memory/????-??-??.md
+
+# Per-channel state (runtime, not tracked)
+data/sessions/
+data/*/MEMORY.md
+!data/memory/MEMORY.md

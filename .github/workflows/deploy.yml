@@ -1,0 +1,29 @@
+name: Deploy
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "package.json"
+      - "bun.lock"
+      - ".env.op"
+      - "lituanic.config.ts"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "
+            cd ~/lituanic &&
+            git pull --ff-only &&
+            bun install --frozen-lockfile &&
+            sudo systemctl restart lituanic &&
+            sleep 3 &&
+            curl -sf http://localhost:9200/health || {
+              git checkout HEAD~1 &&
+              bun install --frozen-lockfile &&
+              sudo systemctl restart lituanic &&
+              echo 'ROLLED BACK' && exit 1
+            }
+          "
