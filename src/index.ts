@@ -21,6 +21,20 @@ export { type SessionStore, createSessionStore } from "./sessions.js";
 
 const pkg = JSON.parse(readFileSync(join(import.meta.dir, "..", "package.json"), "utf-8"));
 
+/**
+ * Convert standard Markdown to Slack mrkdwn format.
+ * Claude outputs GitHub-flavored markdown; Slack needs its own dialect.
+ */
+function toMrkdwn(text: string): string {
+  return text
+    // Bold: **text** → *text*
+    .replace(/\*\*(.+?)\*\*/gs, "*$1*")
+    // Links: [text](url) → <url|text>
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, "<$2|$1>")
+    // Headings: ## Title → *Title*
+    .replace(/^#{1,6}\s+(.+)$/gm, "*$1*");
+}
+
 interface LituanicDaemon {
   config: LituanicConfig;
   start(): Promise<void>;
@@ -100,7 +114,7 @@ export function createDaemon(config: LituanicConfig): LituanicDaemon {
       if (slackApp && event.channelId && result.response) {
         if (result.response.startsWith("[SILENT]")) return;
         const MAX_SLACK_LENGTH = 3900;
-        let text = result.response;
+        let text = toMrkdwn(result.response);
         if (text.length > MAX_SLACK_LENGTH) {
           text = text.slice(0, MAX_SLACK_LENGTH) + `\n\n_(truncated — full response was ${result.response.length} chars)_`;
         }
@@ -108,6 +122,7 @@ export function createDaemon(config: LituanicConfig): LituanicDaemon {
           channel: event.channelId,
           thread_ts: event.threadTs,
           text,
+          mrkdwn: true,
         });
       }
     } catch (err) {

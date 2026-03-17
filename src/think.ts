@@ -140,13 +140,20 @@ export async function think(options: ThinkOptions): Promise<ThinkResult> {
       sessionId = message.session_id;
     }
 
-    // Stream progress: forward assistant text to caller
-    if (message.type === "assistant" && onProgress) {
+    // Stream progress + log tool calls
+    if (message.type === "assistant") {
       const content = (message as any).message?.content;
       if (Array.isArray(content)) {
         for (const block of content) {
-          if (block.type === "text" && block.text) {
+          if (block.type === "text" && block.text && onProgress) {
             onProgress(block.text.slice(0, 100));
+          }
+          if (block.type === "tool_use") {
+            const input = block.input ?? {};
+            const preview = block.name === "Bash"
+              ? String(input.command ?? "").slice(0, 80)
+              : JSON.stringify(input).slice(0, 80);
+            console.log(`[lituanic]   ↳ ${block.name}: ${preview}`);
           }
         }
       }
