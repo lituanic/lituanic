@@ -108,9 +108,6 @@ export function createDaemon(config: LituanicConfig): LituanicDaemon {
         try { await slackApp.client.chat.delete({ channel: event.channelId, ts: typingTs }); } catch {}
       }
 
-      const costStr = result.costUsd !== undefined ? ` $${result.costUsd.toFixed(4)}` : "";
-      console.log(`[lituanic] → ${result.turns ?? "?"}t ${result.stopReason ?? ""}${costStr}: ${result.response.slice(0, 80).replace(/\n/g, " ")}`);
-
       if (slackApp && event.channelId && result.response) {
         if (result.response.startsWith("[SILENT]")) return;
         const MAX_SLACK_LENGTH = 3900;
