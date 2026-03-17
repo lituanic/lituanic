@@ -93,11 +93,15 @@ export function createDaemon(config: LituanicConfig): LituanicDaemon {
 
       if (slackApp && event.channelId && result.response) {
         if (result.response.startsWith("[SILENT]")) return;
+        const MAX_SLACK_LENGTH = 3900;
+        let text = result.response;
+        if (text.length > MAX_SLACK_LENGTH) {
+          text = text.slice(0, MAX_SLACK_LENGTH) + `\n\n_(truncated — full response was ${result.response.length} chars)_`;
+        }
         await slackApp.client.chat.postMessage({
           channel: event.channelId,
           thread_ts: event.threadTs,
-          text: result.response,
-          blocks: [{ type: "markdown", text: result.response }],
+          text,
         });
       }
     } catch (err) {
