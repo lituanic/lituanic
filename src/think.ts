@@ -23,6 +23,15 @@ export interface ThinkResult {
   costUsd?: number;
   turns?: number;
   stopReason?: string;
+  durationMs?: number;
+  durationApiMs?: number;
+  usage?: {
+    inputTokens: number;
+    outputTokens: number;
+    cacheReadTokens: number;
+    cacheCreationTokens: number;
+  };
+  modelUsage?: Record<string, { costUSD: number; inputTokens: number; outputTokens: number }>;
 }
 
 export async function think(options: ThinkOptions): Promise<ThinkResult> {
@@ -52,6 +61,11 @@ export async function think(options: ThinkOptions): Promise<ThinkResult> {
   let costUsd: number | undefined;
   let turns: number | undefined;
   let stopReason: string | undefined;
+  let durationMs: number | undefined;
+  let durationApiMs: number | undefined;
+  let usage: ThinkResult["usage"] | undefined;
+  let modelUsage: ThinkResult["modelUsage"] | undefined;
+  let resolvedModel = config.model;
 
   for await (const message of query({
     prompt: event.text,
@@ -135,14 +149,19 @@ export async function think(options: ThinkOptions): Promise<ThinkResult> {
       },
     },
   })) {
-    // Capture session ID
+    // Init: log session + model
     if (message.type === "system" && message.subtype === "init") {
       sessionId = message.session_id;
+      resolvedModel = (message as any).model ?? config.model;
+      const tools = ((message as any).tools ?? []) as string[];
+      console.log(`[lituanic]   session: ${sessionId} model: ${resolvedModel} tools: ${tools.length}`);
     }
 
-    // Stream progress + log tool calls
+    // Stream progress + log tool calls + per-turn tokens
     if (message.type === "assistant") {
-      const content = (message as any).message?.content;
+      const msg = message as any;
+      const content = msg.message?.content;
+      const msgUsage = msg.message?.usage;
       if (Array.isArray(content)) {
         for (const block of content) {
           if (block.type === "text" && block.text && onProgress) {
@@ -153,7 +172,10 @@ export async function think(options: ThinkOptions): Promise<ThinkResult> {
             const preview = block.name === "Bash"
               ? String(input.command ?? "").slice(0, 80)
               : JSON.stringify(input).slice(0, 80);
-            console.log(`[lituanic]   ↳ ${block.name}: ${preview}`);
+            const tokenInfo = msgUsage
+              ? ` [in:${msgUsage.input_tokens} out:${msgUsage.output_tokens}]`
+              : "";
+            console.log(`[lituanic]   ↳ ${block.name}: ${preview}${tokenInfo}`);
           }
         }
       }
@@ -166,6 +188,36 @@ export async function think(options: ThinkOptions): Promise<ThinkResult> {
       costUsd = msg.total_cost_usd;
       turns = msg.num_turns;
       stopReason = msg.subtype;
+      durationMs = msg.duration_ms;
+      durationApiMs = msg.duration_api_ms;
+
+      const u = msg.usage;
+      if (u) {
+        usage = {
+          inputTokens: u.input_tokens ?? 0,
+          outputTokens: u.output_tokens ?? 0,
+          cacheReadTokens: u.cache_read_input_tokens ?? 0,
+          cacheCreationTokens: u.cache_creation_input_tokens ?? 0,
+        };
+      }
+
+      if (msg.modelUsage) modelUsage = msg.modelUsage;
+
+      // Terminal summary
+      const ms = durationMs !== undefined ? `${durationMs}ms` : "?ms";
+      const apiMs = durationApiMs !== undefined ? `(api:${durationApiMs}ms)` : "";
+      const tokStr = usage
+        ? `in:${usage.inputTokens} out:${usage.outputTokens}` +
+          (usage.cacheReadTokens ? ` cache↩:${usage.cacheReadTokens}` : "") +
+          (usage.cacheCreationTokens ? ` cache✎:${usage.cacheCreationTokens}` : "")
+        : "";
+      const costStr = costUsd !== undefined ? ` $${costUsd.toFixed(4)}` : "";
+      const modelsStr = modelUsage
+        ? Object.keys(modelUsage).join("+")
+        : resolvedModel;
+      console.log(
+        `[lituanic] → ${msg.subtype} | ${turns ?? "?"}t | ${ms} ${apiMs} | ${tokStr} | ${modelsStr}${costStr}`,
+      );
 
       if (msg.subtype === "success") {
         result = msg.result ?? "";
@@ -191,5 +243,5 @@ export async function think(options: ThinkOptions): Promise<ThinkResult> {
     `[${event.source}] ${event.channelId ?? "?"}: ${summary}${result.length > 80 ? "..." : ""}${costStr}`,
   );
 
-  return { response: result, model: config.model, sessionId, costUsd, turns, stopReason };
+  return { response: result, model: resolvedModel, sessionId, costUsd, turns, stopReason, durationMs, durationApiMs, usage, modelUsage };
 }
