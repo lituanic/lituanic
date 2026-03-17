@@ -51,13 +51,14 @@ async function main() {
     }
 
     case "version": {
-      console.log(`lituanic ${pkg.version}`);
+      console.log(`lituanic ${pkg.version} · est. 1009`);
       break;
     }
 
     default: {
       console.log(`
 lituanic v${pkg.version} — AI coworker for solo founders
+est. 1009 · Quedlinburg Chronicles
 
 Usage:
   lituanic init [name]      Scaffold a new agent project (or "." for current dir)

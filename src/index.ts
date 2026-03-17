@@ -141,10 +141,11 @@ export function createDaemon(config: LituanicConfig): LituanicDaemon {
 
       healthServer = createServer((req, res) => {
         if (req.url === config.health.endpoint) {
-          res.writeHead(200, { "Content-Type": "application/json" });
+          res.writeHead(200, { "Content-Type": "application/json", "Server": `Lituanic/${pkg.version}` });
           res.end(JSON.stringify({
             status: "ok",
             name: config.name,
+            since: 1009,
             uptime: Math.floor((Date.now() - startTime) / 1000),
             lastEvent,
             activeSessions,
