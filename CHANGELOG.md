@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.3] - 2026-03-17
+
+### Added
+- Rich terminal debug logging. Each request now shows:
+  - On start: `session: <id> model: <name> tools: <count>`
+  - Per tool call: `↳ ToolName: preview [in:N out:N]` with per-turn token counts
+  - On completion: `→ success | 7t | 1240ms (api:980ms) | in:2341 out:456 cache↩:1200 | claude-sonnet-4-6 $0.1659`
+- `ThinkResult` now exposes `durationMs`, `durationApiMs`, `usage`, and `modelUsage` for callers
+
 ## [0.1.2] - 2026-03-17
 
 ### Added
