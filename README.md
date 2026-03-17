@@ -12,7 +12,7 @@ This is what smart contracts promised — code-first, zero-human operations. Lit
 
 Lituanic is a thin wiring layer on the Claude Agent SDK. The SDK does all the hard work — agent loop, tool calling, sessions, compaction, subagents, sandboxing. Lituanic wires it to Slack and adds opinionated defaults. When Anthropic ships an SDK update, Lituanic gets better for free.
 
-**~1,300 lines of TypeScript. 6 built-in integrations. 3 dependencies.**
+**~1,400 lines of TypeScript. 6 built-in integrations. 3 dependencies.**
 
 ## Built-in integrations
 
@@ -32,9 +32,8 @@ Adding an integration = writing one SKILL.md file + adding env checks to `doctor
 ## Quick start
 
 ```bash
-mkdir my-agent && cd my-agent
-bun init -y
-bun add lituanic
+bunx lituanic init my-agent
+cd my-agent
 ```
 
 ```typescript
@@ -110,7 +109,7 @@ No code change. No restart. The agent immediately knows how to deploy.
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                       lituanic (~1,000 LOC)                   │
+│                       lituanic (~1,400 LOC)                   │
 │                                                              │
 │  ┌─────────────┐  ┌─────────────┐  ┌──────────────────────┐ │
 │  │ gateway.ts  │  │ sessions.ts │  │ Claude Agent SDK     │ │
@@ -145,14 +144,15 @@ No code change. No restart. The agent immediately knows how to deploy.
 |---|---|---|
 | `gateway.ts` | 299 | Slack Bolt + webhooks (Linear state machine) + cron + per-channel queue |
 | `think.ts` | 188 | `query()` wrapper: session resume, effort routing, canUseTool, progress |
-| `index.ts` | 163 | Daemon boot, typing indicator, notification forwarding |
-| `doctor.ts` | 96 | Integration health checks |
-| `config.ts` | 81 | Zod config with opinionated defaults |
-| `cli.ts` | 66 | CLI: start, doctor, health, version |
+| `index.ts` | 201 | Daemon boot, typing indicator, notification forwarding |
+| `init.ts` | 158 | `lituanic init` scaffolding |
+| `config.ts` | 137 | Zod config with opinionated defaults |
+| `doctor.ts` | 117 | Integration health checks |
+| `cli.ts` | 87 | CLI: start, init, doctor, health, version |
+| `sessions.ts` | 75 | Slack thread to SDK session_id mapping |
 | `memory.ts` | 65 | Daily logs + per-channel state |
-| `sessions.ts` | 40 | Slack thread to SDK session_id mapping |
 | `tools.ts` | 40 | Slack MCP tools (only typed integration) |
-| **Total** | **~1,038** | |
+| **Total** | **~1,367** | |
 
 ### What the Agent SDK owns (delegated)
 
@@ -326,7 +326,7 @@ Health check built in: `GET :9200/health` returns JSON.
 
 | | Pi-mom | Lituanic |
 |---|---|---|
-| Codebase | Closed-source npm + 8 monkey patches | ~1,000 LOC, open source |
+| Codebase | Closed-source npm + 8 monkey patches | ~1,400 LOC, open source |
 | Concurrency | Serial per channel, no subagents | SDK subagents, parallel work |
 | Sessions | context.jsonl (custom, fragile) | SDK session persist + resume |
 | Integrations | Custom extensions in host process | Skills + CLI via Bash |
@@ -347,7 +347,7 @@ Health check built in: `GET :9200/health` returns JSON.
 | | OpenClaw | Lituanic |
 |---|---|---|
 | Scope | 20+ channels, 5400+ skills, voice, canvas | Slack + 6 built-in skills |
-| Codebase | 19,800+ commits | ~1,000 LOC |
+| Codebase | 19,800+ commits | ~1,400 LOC |
 | Security | 500+ open issues | Minimal surface, single tenant |
 | Design | Everything for everyone | One founder, one company |
 

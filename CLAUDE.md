@@ -23,6 +23,7 @@ Lituanic owns only the Slack gateway wiring. Everything else is the Agent SDK or
 - `src/config.ts` — Zod config with opinionated defaults
 - `src/index.ts` — Daemon boot + typing indicator + notification forwarding
 - `src/cli.ts` — CLI entry point (start, doctor, health, version)
+- `src/init.ts` — `lituanic init` scaffolding (creates project from template)
 
 ### Agent SDK owns (delegated)
 
@@ -64,6 +65,18 @@ CLAUDE.md                  # This file (loaded by SDK at project root)
 │   ├── gws/SKILL.md
 │   ├── browser/SKILL.md
 │   └── github/SKILL.md
+
+.github/
+├── workflows/
+│   ├── ci.yml             # Lint + test on PR
+│   ├── deploy.yml         # VPS deploy on push to main
+│   └── release.yml        # npm publish on GitHub release
+
+src/
+├── __tests__/             # Bun test suite
+│   ├── config.test.ts
+│   ├── sessions.test.ts
+│   └── smoke.test.ts
 
 data/
 ├── memory/MEMORY.md       # Daily logs (runtime)
