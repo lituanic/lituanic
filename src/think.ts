@@ -1,4 +1,11 @@
 import { query } from "@anthropic-ai/claude-agent-sdk";
+import type {
+  SDKSystemMessage,
+  SDKAssistantMessage,
+  SDKResultMessage,
+  SDKResultSuccess,
+  HookInput,
+} from "@anthropic-ai/claude-agent-sdk";
 import type { LituanicConfig } from "./config.js";
 import type { IncomingEvent } from "./gateway.js";
 import type { MemoryManager } from "./memory.js";
@@ -53,7 +60,7 @@ export async function think(options: ThinkOptions): Promise<ThinkResult> {
   // Effort: medium for interactive (saves 20-40% output tokens vs high), low for cron
   const effort = event.source === "cron" ? "low" as const : "medium" as const;
 
-  const mcpServers: Record<string, any> = {};
+  const mcpServers: Record<string, ReturnType<typeof createSlackMcpServer>> = {};
   if (slack) mcpServers.slack = createSlackMcpServer(slack, event);
 
   let result = "";
@@ -122,7 +129,7 @@ export async function think(options: ThinkOptions): Promise<ThinkResult> {
       // Security: canUseTool for blocked patterns
       canUseTool: async (tool, input) => {
         if (tool === "Bash") {
-          const command = String((input as any).command ?? "");
+          const command = String(input.command ?? "");
           for (const pattern of config.blockedPatterns) {
             if (pattern.test(command)) {
               return { behavior: "deny" as const, message: `Blocked: ${pattern}` };
@@ -152,8 +159,9 @@ export async function think(options: ThinkOptions): Promise<ThinkResult> {
         ...(onNotification
           ? {
               Notification: [{
-                hooks: [async (input: any) => {
-                  onNotification(input?.message ?? "");
+                hooks: [async (input: HookInput) => {
+                  const msg = "message" in input ? String(input.message) : "";
+                  onNotification(msg);
                   return {};
                 }],
               }],
@@ -164,39 +172,37 @@ export async function think(options: ThinkOptions): Promise<ThinkResult> {
   })) {
     // Init: log session + model
     if (message.type === "system" && message.subtype === "init") {
-      sessionId = message.session_id;
-      resolvedModel = (message as any).model ?? config.model;
-      const tools = ((message as any).tools ?? []) as string[];
-      console.log(`[lituanic]   session: ${sessionId} model: ${resolvedModel} tools: ${tools.length}`);
+      const init = message as SDKSystemMessage;
+      sessionId = init.session_id;
+      resolvedModel = init.model;
+      console.log(`[lituanic]   session: ${sessionId} model: ${resolvedModel} tools: ${init.tools.length}`);
     }
 
     // Stream progress + log tool calls + per-turn tokens
     if (message.type === "assistant") {
-      const msg = message as any;
-      const content = msg.message?.content;
-      const msgUsage = msg.message?.usage;
-      if (Array.isArray(content)) {
-        for (const block of content) {
-          if (block.type === "text" && block.text && onProgress) {
-            onProgress(block.text.slice(0, 100));
-          }
-          if (block.type === "tool_use") {
-            const input = block.input ?? {};
-            const preview = block.name === "Bash"
-              ? String(input.command ?? "").slice(0, 80)
-              : JSON.stringify(input).slice(0, 80);
-            const tokenInfo = msgUsage
-              ? ` [in:${msgUsage.input_tokens} out:${msgUsage.output_tokens}]`
-              : "";
-            console.log(`[lituanic]   ↳ ${block.name}: ${preview}${tokenInfo}`);
-          }
+      const msg = message as SDKAssistantMessage;
+      const content = msg.message.content;
+      const msgUsage = msg.message.usage;
+      for (const block of content) {
+        if (block.type === "text" && block.text && onProgress) {
+          onProgress(block.text.slice(0, 100));
+        }
+        if (block.type === "tool_use") {
+          const input = block.input as Record<string, unknown>;
+          const preview = block.name === "Bash"
+            ? String(input.command ?? "").slice(0, 80)
+            : JSON.stringify(input).slice(0, 80);
+          const tokenInfo = msgUsage
+            ? ` [in:${msgUsage.input_tokens} out:${msgUsage.output_tokens}]`
+            : "";
+          console.log(`[lituanic]   ↳ ${block.name}: ${preview}${tokenInfo}`);
         }
       }
     }
 
     // Final result
     if (message.type === "result") {
-      const msg = message as any;
+      const msg = message as SDKResultMessage;
       sessionId = msg.session_id ?? sessionId;
       costUsd = msg.total_cost_usd;
       turns = msg.num_turns;
@@ -205,35 +211,31 @@ export async function think(options: ThinkOptions): Promise<ThinkResult> {
       durationApiMs = msg.duration_api_ms;
 
       const u = msg.usage;
-      if (u) {
-        usage = {
-          inputTokens: u.input_tokens ?? 0,
-          outputTokens: u.output_tokens ?? 0,
-          cacheReadTokens: u.cache_read_input_tokens ?? 0,
-          cacheCreationTokens: u.cache_creation_input_tokens ?? 0,
-        };
-      }
+      usage = {
+        inputTokens: u.input_tokens ?? 0,
+        outputTokens: u.output_tokens ?? 0,
+        cacheReadTokens: u.cache_read_input_tokens ?? 0,
+        cacheCreationTokens: u.cache_creation_input_tokens ?? 0,
+      };
 
-      if (msg.modelUsage) modelUsage = msg.modelUsage;
+      modelUsage = msg.modelUsage;
 
       // Terminal summary
-      const ms = durationMs !== undefined ? `${durationMs}ms` : "?ms";
-      const apiMs = durationApiMs !== undefined ? `(api:${durationApiMs}ms)` : "";
-      const tokStr = usage
-        ? `in:${usage.inputTokens} out:${usage.outputTokens}` +
-          (usage.cacheReadTokens ? ` cache↩:${usage.cacheReadTokens}` : "") +
-          (usage.cacheCreationTokens ? ` cache✎:${usage.cacheCreationTokens}` : "")
-        : "";
-      const costStr = costUsd !== undefined ? ` $${costUsd.toFixed(4)}` : "";
+      const ms = `${durationMs}ms`;
+      const apiMs = `(api:${durationApiMs}ms)`;
+      const tokStr = `in:${usage.inputTokens} out:${usage.outputTokens}` +
+        (usage.cacheReadTokens ? ` cache↩:${usage.cacheReadTokens}` : "") +
+        (usage.cacheCreationTokens ? ` cache✎:${usage.cacheCreationTokens}` : "");
+      const costStr = ` $${costUsd.toFixed(4)}`;
       const modelsStr = modelUsage
         ? Object.keys(modelUsage).join("+")
         : resolvedModel;
       console.log(
-        `[lituanic] → ${msg.subtype} | ${turns ?? "?"}t | ${ms} ${apiMs} | ${tokStr} | ${modelsStr}${costStr}`,
+        `[lituanic] → ${msg.subtype} | ${turns}t | ${ms} ${apiMs} | ${tokStr} | ${modelsStr}${costStr}`,
       );
 
       if (msg.subtype === "success") {
-        result = msg.result ?? "";
+        result = (msg as SDKResultSuccess).result;
       } else if (msg.subtype === "error_max_turns") {
         result = `Hit turn limit (${config.maxTurns}). Session saved — follow up in this thread to continue.`;
       } else if (msg.subtype === "error_max_budget_usd") {
