@@ -81,16 +81,19 @@ Your agent is live in Slack with access to: file system, shell, web search, suba
 $ lituanic doctor
 
   ✓ ANTHROPIC_API_KEY: Set
+  ✓ op CLI: Installed
+  ✓ OP_SERVICE_ACCOUNT_TOKEN: Set — 1Password secrets available
   ✓ Slack bot token: Set
   ✓ Slack app token: Set
   ✓ Linear API key: Set
-  ✓ OP_SERVICE_ACCOUNT_TOKEN: Set
-  ✓ op CLI: Installed
-  ✓ Backup: Last backup 6h ago
+  ✓ gh CLI: Installed
+  ✓ GH_TOKEN: Set
+  ! agent-browser CLI: Not found — install: npm i -g agent-browser && agent-browser install
   ! gws CLI: Not found — install: npm i -g @googleworkspace/cli
   ! GWS credentials: Missing — Google Workspace disabled
+  ✓ Backup: Last backup 6h ago
 
-  7 ok, 2 warnings, 0 failures
+  9 ok, 3 warnings, 0 failures
 ```
 
 ### Add a skill
