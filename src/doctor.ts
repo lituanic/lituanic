@@ -11,7 +11,7 @@ export interface Check {
 }
 
 function env(key: string): boolean {
-  return !!process.env[key];
+  return !!process.env[key]?.trim();
 }
 
 function cmd(command: string): boolean {
@@ -26,11 +26,17 @@ function cmd(command: string): boolean {
 export async function doctor(dataDir?: string): Promise<Check[]> {
   const checks: Check[] = [];
 
-  // Core
+  // Core — either API key or OAuth token is sufficient
+  const hasApiKey = env("ANTHROPIC_API_KEY");
+  const hasOAuthToken = env("CLAUDE_CODE_OAUTH_TOKEN");
   checks.push({
-    name: "ANTHROPIC_API_KEY",
-    status: env("ANTHROPIC_API_KEY") ? "ok" : "fail",
-    detail: env("ANTHROPIC_API_KEY") ? "Set" : "Missing — required for Claude",
+    name: "Claude auth",
+    status: hasApiKey || hasOAuthToken ? "ok" : "fail",
+    detail: hasOAuthToken
+      ? "OAuth token set (Claude Pro/Max subscription)"
+      : hasApiKey
+        ? "API key set"
+        : "Missing — set ANTHROPIC_API_KEY or CLAUDE_CODE_OAUTH_TOKEN (run `claude setup-token`)",
   });
 
   // 1Password
