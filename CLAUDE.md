@@ -87,7 +87,8 @@ src/
 │   ├── format.test.ts
 │   ├── init.test.ts
 │   ├── sessions.test.ts
-│   └── smoke.test.ts
+│   ├── smoke.test.ts
+│   └── think.test.ts
 
 data/
 ├── memory/MEMORY.md       # Daily logs (runtime)

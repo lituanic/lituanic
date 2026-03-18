@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.8] - 2026-03-18
+
+### Changed
+- Upgraded Zod from v3 to v4 stable (`^4.0.0`) — standard `"zod"` import, no more `"zod/v4"` subpath
+- Pinned Claude Agent SDK to exact `0.2.77` (was `^0.2.76`) to prevent surprise breakage
+- Replaced all `as any` casts in `think.ts` with proper SDK type imports (`SDKSystemMessage`, `SDKAssistantMessage`, `SDKResultMessage`, `SDKResultSuccess`, `HookInput`)
+- Fixed `tsconfig.json` — added `"types": ["bun-types"]` so `tsc --noEmit` resolves Bun globals
+- Fixed lint script from `bun run tsc` to `bunx tsc` (was failing silently)
+
+### Added
+- `think.test.ts` — 13 tests covering the core `think()` function with mocked SDK `query()`: init/assistant/success flow, usage extraction, error handling (max turns, max budget, execution error), progress callbacks, tool use logging, session continuity, cron effort routing, canUseTool blocked patterns, and daily log entries
+
+### Fixed
+- `z.instanceof(RegExp)` → `z.custom<RegExp>()` in config (removed in Zod v4)
+- `.default({})` on health config → `.default({ port: 9200, endpoint: "/health" })` (Zod v4 requires full default values)
+
 ## [0.1.7] - 2026-03-18
 
 ### Added
