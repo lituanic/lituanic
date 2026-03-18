@@ -24,7 +24,7 @@
   "scripts": {
     "start": "bun run src/cli.ts",
     "dev": "bun --watch run src/cli.ts",
-    "lint": "bun run tsc --noEmit",
+    "lint": "bunx tsc --noEmit",
     "test": "bun test",
     "build": "tsc"
   },
@@ -52,7 +52,7 @@
   "homepage": "https://lituanic.com",
   "trustedDependencies": [],
   "dependencies": {
-    "@anthropic-ai/claude-agent-sdk": "^0.2.76",
+    "@anthropic-ai/claude-agent-sdk": "0.2.77",
     "@slack/bolt": "^4.2.0",
     "croner": "^9.0.0",
     "zod": "^3.24.0"

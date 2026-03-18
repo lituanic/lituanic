@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v4";
 
 const WebhookRouteSchema = z.object({
   secret: z.string().optional(),
@@ -39,7 +39,7 @@ export const ConfigSchema = z.object({
   maxBudgetUsd: z.number().default(5.0),
   maxTurns: z.number().default(50),
   sandbox: z.boolean().default(false),
-  blockedPatterns: z.array(z.instanceof(RegExp)).default([
+  blockedPatterns: z.array(z.custom<RegExp>((v) => v instanceof RegExp)).default([
     /rm\s+-rf\s+[\/~]/,
     /mkfs/,
     /shutdown/,
@@ -53,7 +53,7 @@ export const ConfigSchema = z.object({
       port: z.number().default(9200),
       endpoint: z.string().default("/health"),
     })
-    .default({}),
+    .default({ port: 9200, endpoint: "/health" }),
 });
 
 export type LituanicConfig = z.infer<typeof ConfigSchema>;
