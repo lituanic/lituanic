@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.7] - 2026-03-18
+
+### Added
+- Claude Pro/Max OAuth authentication — users can now set `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token`) instead of `ANTHROPIC_API_KEY` to use their subscription instead of pay-per-use API billing
+- 1Password template reference for OAuth token in `deploy/.env.op.template`
+
+### Changed
+- `lituanic doctor` auth check renamed from `ANTHROPIC_API_KEY` to `Claude auth` — accepts either API key or OAuth token
+- `env()` helper in doctor now trims whitespace for robustness across all checks
+
 ## [0.1.6] - 2026-03-18
 
 ### Added
