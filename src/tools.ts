@@ -1,5 +1,5 @@
 import { tool, createSdkMcpServer } from "@anthropic-ai/claude-agent-sdk";
-import { z } from "zod/v4";
+import { z } from "zod";
 import { readFileSync } from "node:fs";
 import { basename } from "node:path";
 import type { App } from "@slack/bolt";
