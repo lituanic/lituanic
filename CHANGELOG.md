@@ -9,7 +9,7 @@ All notable changes to this project will be documented in this file.
   - On start: `session: <id> model: <name> tools: <count>`
   - Per tool call: `↳ ToolName: preview [in:N out:N]` with per-turn token counts
   - On completion: `→ success | 7t | 1240ms (api:980ms) | in:2341 out:456 cache↩:1200 | claude-sonnet-4-6 $0.1659`
-- `ThinkResult` now exposes `durationMs`, `durationApiMs`, `usage`, and `modelUsage` for callers
+- The result object now exposes duration, API latency, token breakdown, and per-model cost — useful if you're building on top of Lituanic and want to surface these metrics
 
 ## [0.1.2] - 2026-03-17
 

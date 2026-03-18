@@ -15,7 +15,7 @@ Lituanic owns only the Slack gateway wiring. Everything else is the Agent SDK or
 ### Lituanic owns (the wiring)
 
 - `src/gateway.ts` — Slack Bolt + webhooks (with Linear state machine) + cron + per-channel queue
-- `src/think.ts` — Thin `query()` wrapper: session resume, effort routing, canUseTool, progress streaming
+- `src/think.ts` — Thin `query()` wrapper: session resume, effort routing, canUseTool, progress streaming, debug logging (model, tokens, latency, cost)
 - `src/tools.ts` — Slack MCP tools (slack_reply, slack_react) — the only typed tools
 - `src/sessions.ts` — Slack thread → SDK session_id mapping
 - `src/memory.ts` — Daily logs + per-channel state
