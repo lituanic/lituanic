@@ -12,7 +12,7 @@ This is what smart contracts promised — code-first, zero-human operations. Lit
 
 Lituanic is a thin wiring layer on the Claude Agent SDK. The SDK does all the hard work — agent loop, tool calling, sessions, compaction, subagents, sandboxing. Lituanic wires it to Slack and adds opinionated defaults. When Anthropic ships an SDK update, Lituanic gets better for free.
 
-**~1,500 lines of TypeScript. 6 built-in integrations. 3 dependencies.**
+**~1,600 lines of TypeScript. 6 built-in integrations. 3 dependencies.**
 
 ## Built-in integrations
 
@@ -84,11 +84,13 @@ $ lituanic doctor
   ✓ Slack bot token: Set
   ✓ Slack app token: Set
   ✓ Linear API key: Set
+  ✓ OP_SERVICE_ACCOUNT_TOKEN: Set
   ✓ op CLI: Installed
+  ✓ Backup: Last backup 6h ago
   ! gws CLI: Not found — install: npm i -g @googleworkspace/cli
   ! GWS credentials: Missing — Google Workspace disabled
 
-  5 ok, 2 warnings, 0 failures
+  7 ok, 2 warnings, 0 failures
 ```
 
 ### Add a skill
@@ -128,7 +130,7 @@ No code change. No restart. The agent immediately knows how to deploy.
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                       lituanic (~1,500 LOC)                   │
+│                       lituanic (~1,600 LOC)                   │
 │                                                              │
 │  ┌─────────────┐  ┌─────────────┐  ┌──────────────────────┐ │
 │  │ gateway.ts  │  │ sessions.ts │  │ Claude Agent SDK     │ │
@@ -144,14 +146,19 @@ No code change. No restart. The agent immediately knows how to deploy.
 │  │             │  │             │  │ • Session persist     │ │
 │  │ slack_reply │  │ env checks  │  │ • Compaction          │ │
 │  │ slack_react │  │ CLI checks  │  │ • Subagents           │ │
-│  │ slack_up.. │  │ health      │  │ • Sandbox             │ │
-│  └─────────────┘  └─────────────┘  │ • File checkpointing │ │
-│                                    │ • Thinking            │ │
-│  .claude/skills/ (loaded by SDK)   │ • Permissions         │ │
-│  ├── slack/SKILL.md                │ • Notifications       │ │
-│  ├── linear/SKILL.md               │ • Cost tracking       │ │
-│  ├── op/SKILL.md                   └──────────────────────┘ │
-│  ├── gws/SKILL.md                                           │
+│  │ slack_up.. │  │ 1P + backup │  │ • Sandbox             │ │
+│  └──────┬──────┘  └─────────────┘  │ • File checkpointing │ │
+│         │                          │ • Thinking            │ │
+│  ┌──────┴──────┐                   │ • Permissions         │ │
+│  │ format.ts   │                   │ • Notifications       │ │
+│  │ md → mrkdwn │                   │ • Cost tracking       │ │
+│  └─────────────┘                   └──────────────────────┘ │
+│                                                              │
+│  .claude/skills/ (loaded by SDK)                             │
+│  ├── slack/SKILL.md                                          │
+│  ├── linear/SKILL.md                                         │
+│  ├── op/SKILL.md                                             │
+│  ├── gws/SKILL.md                                            │
 │  ├── browser/SKILL.md                                       │
 │  └── github/SKILL.md                                        │
 └──────────────────────────────────────────────────────────────┘
@@ -163,15 +170,16 @@ No code change. No restart. The agent immediately knows how to deploy.
 |---|---|---|
 | `gateway.ts` | 300 | Slack Bolt + webhooks (Linear state machine) + cron + per-channel queue |
 | `think.ts` | 260 | `query()` wrapper: session resume, effort routing, cost optimization, canUseTool, progress, debug logging |
-| `index.ts` | 233 | Daemon boot, typing indicator, notification forwarding, mrkdwn formatting |
-| `init.ts` | 158 | `lituanic init` scaffolding |
+| `index.ts` | 210 | Daemon boot, typing indicator, notification forwarding |
+| `init.ts` | 184 | `lituanic init` scaffolding (config, .env, .env.op, .gitignore) |
+| `doctor.ts` | 169 | Integration health checks (env vars, CLIs, 1Password, backup status) |
 | `config.ts` | 137 | Zod config with opinionated defaults |
-| `doctor.ts` | 117 | Integration health checks |
 | `cli.ts` | 87 | CLI: start, init, doctor, health, version |
 | `sessions.ts` | 75 | Slack thread to SDK session_id mapping |
 | `memory.ts` | 65 | Daily logs + per-channel state |
-| `tools.ts` | 83 | Slack MCP tools: reply, react, upload (only typed integration) |
-| **Total** | **~1,515** | |
+| `tools.ts` | 63 | Slack MCP tools: reply, react, upload (only typed integration) |
+| `format.ts` | 23 | Markdown → Slack mrkdwn converter (shared by index + tools) |
+| **Total** | **~1,573** | |
 
 ### What the Agent SDK owns (delegated)
 
@@ -327,16 +335,25 @@ op run --env-file=.env.op -- bun start
 
 ## Deploy
 
-```ini
-# /etc/systemd/system/lituanic.service
+Everything lives in `deploy/` — systemd unit, backup cron, bootstrap script, and 1Password templates.
+
+```bash
+# On a fresh Ubuntu/Debian VPS
+bash deploy/setup.sh
+
+# Set the 1Password bootstrap token (root-only)
+sudo mkdir -p /etc/systemd/system/lituanic.service.d
+sudo tee /etc/systemd/system/lituanic.service.d/override.conf <<EOF
 [Service]
-Type=simple
-User=agent
-WorkingDirectory=/home/agent/lituanic
-ExecStart=/usr/local/bin/op run --env-file=.env.op -- /usr/local/bin/bun run src/cli.ts
-Restart=on-failure
-RestartSec=10
+Environment=OP_SERVICE_ACCOUNT_TOKEN=ops_YOUR_TOKEN
+EOF
+sudo chmod 600 /etc/systemd/system/lituanic.service.d/override.conf
+sudo systemctl daemon-reload && sudo systemctl start lituanic
 ```
+
+The systemd unit (`deploy/lituanic.service`) runs `op run --env-file=.env.op -- bun start` with hardened security: `NoNewPrivileges`, `ProtectSystem=strict`, `ProtectHome=read-only`, `PrivateTmp`.
+
+Daily backups via `deploy/backup.sh` sync `data/` to Google Drive with rclone. `lituanic doctor` warns if the last backup is older than 48 hours.
 
 Health check built in: `GET :9200/health` returns JSON.
 
@@ -346,7 +363,7 @@ Health check built in: `GET :9200/health` returns JSON.
 
 | | Pi-mom | Lituanic |
 |---|---|---|
-| Codebase | Closed-source npm + 8 monkey patches | ~1,500 LOC, open source |
+| Codebase | Closed-source npm + 8 monkey patches | ~1,600 LOC, open source |
 | Concurrency | Serial per channel, no subagents | SDK subagents, parallel work |
 | Sessions | context.jsonl (custom, fragile) | SDK session persist + resume |
 | Integrations | Custom extensions in host process | Skills + CLI via Bash |
@@ -367,7 +384,7 @@ Health check built in: `GET :9200/health` returns JSON.
 | | OpenClaw | Lituanic |
 |---|---|---|
 | Scope | 20+ channels, 5400+ skills, voice, canvas | Slack + 6 built-in skills |
-| Codebase | 19,800+ commits | ~1,500 LOC |
+| Codebase | 19,800+ commits | ~1,600 LOC |
 | Security | 500+ open issues | Minimal surface, single tenant |
 | Design | Everything for everyone | One founder, one company |
 
