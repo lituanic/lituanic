@@ -10,7 +10,7 @@ All notable changes to this project will be documented in this file.
 - `OP_SERVICE_ACCOUNT_TOKEN` health check in `lituanic doctor`
 - Backup health check in `lituanic doctor` — reads `.last-backup` marker, warns if stale (>48h) or corrupt
 - 5-second timeout on all `execSync` CLI checks in doctor (prevents hangs on broken CLIs)
-- Test suites for `format.ts` (11 tests), `doctor.ts` (14 tests), and `init.ts` (12 tests)
+- Test suites for `format.ts` (16 tests), `doctor.ts` (14 tests), and `init.ts` (27 tests)
 
 ### Changed
 - Extracted `toMrkdwn` Slack formatter to shared `src/format.ts` — eliminates duplication between `index.ts` and `tools.ts`

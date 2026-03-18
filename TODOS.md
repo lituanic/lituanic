@@ -8,4 +8,4 @@
 
 **Context:** The webhook server binds to `0.0.0.0:9100` and serves `/webhook/linear`. A Caddy config would reverse-proxy `https://hooks.yourdomain.com → localhost:9100` with automatic Let's Encrypt certs. This is VPS-specific (requires a domain name), so it's a template, not a hard requirement.
 
-**Depends on:** `deploy/` directory existing (being added in the hardening PR).
+**Depends on:** None — `deploy/` directory shipped in v0.1.6.
