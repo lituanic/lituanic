@@ -1,0 +1,34 @@
+[Unit]
+Description=Lituanic AI Coworker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=lituanic
+Group=lituanic
+WorkingDirectory=/home/lituanic/lituanic
+ExecStart=/usr/local/bin/op run --env-file=/home/lituanic/.env.op -- /home/lituanic/.bun/bin/bun run src/cli.ts start
+Restart=on-failure
+RestartSec=10
+StartLimitBurst=5
+StartLimitIntervalSec=60
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/lituanic/lituanic/data
+PrivateTmp=true
+
+# Graceful shutdown (30s matches daemon's drain timeout)
+TimeoutStopSec=35
+KillSignal=SIGTERM
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=lituanic
+
+[Install]
+WantedBy=multi-user.target

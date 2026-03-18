@@ -12,3 +12,6 @@ data/memory/????-??-??.md
 data/sessions/
 data/*/MEMORY.md
 !data/memory/MEMORY.md
+
+# Backup marker (written by deploy/backup.sh)
+data/.last-backup

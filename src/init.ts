@@ -72,6 +72,25 @@ LINEAR_WEBHOOK_SECRET=
 # OP_SERVICE_ACCOUNT_TOKEN=
 `;
 
+const ENV_OP_TEMPLATE = `# Lituanic — 1Password secret references
+# Edit the op:// URIs to match your vault/item names.
+# Usage: op run --env-file=.env.op -- bun start
+#
+# Required
+ANTHROPIC_API_KEY=op://Lituanic/Anthropic/api-key
+
+# Slack (Socket Mode)
+SLACK_BOT_TOKEN=op://Lituanic/Slack/bot-token
+SLACK_APP_TOKEN=op://Lituanic/Slack/app-token
+
+# Linear (optional)
+LINEAR_API_KEY=op://Lituanic/Linear/api-key
+LINEAR_WEBHOOK_SECRET=op://Lituanic/Linear/webhook-secret
+
+# GitHub (optional)
+GH_TOKEN=op://Lituanic/GitHub/token
+`;
+
 const MEMORY_TEMPLATE = `# Memory
 
 Agent memory will be written here during operation.
@@ -126,6 +145,13 @@ export function init(name: string) {
     console.log("  created .env (fill in your tokens)");
   }
 
+  // Write .env.op (1Password secret references)
+  const envOpFile = join(projectDir, ".env.op");
+  if (!existsSync(envOpFile)) {
+    writeFileSync(envOpFile, ENV_OP_TEMPLATE);
+    console.log("  created .env.op (1Password URIs — edit to match your vault)");
+  }
+
   // Write memory
   const memoryFile = join(projectDir, "data", "memory", "MEMORY.md");
   if (!existsSync(memoryFile)) {
@@ -136,7 +162,7 @@ export function init(name: string) {
   // Write .gitignore if not exists
   const gitignore = join(projectDir, ".gitignore");
   if (!existsSync(gitignore)) {
-    writeFileSync(gitignore, `node_modules/\n.env\n.env.op\n*.log\ndata/memory/????-??-??.md\ndata/sessions/\ndata/*/MEMORY.md\n!data/memory/MEMORY.md\n`);
+    writeFileSync(gitignore, `node_modules/\n.env\n.env.op\n*.log\ndata/memory/????-??-??.md\ndata/sessions/\ndata/*/MEMORY.md\n!data/memory/MEMORY.md\ndata/.last-backup\n`);
     console.log("  created .gitignore");
   }
 

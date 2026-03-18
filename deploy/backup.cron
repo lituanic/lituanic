@@ -1,0 +1,2 @@
+# Lituanic data backup — daily at 4:00 AM UTC
+0 4 * * * lituanic /home/lituanic/lituanic/deploy/backup.sh

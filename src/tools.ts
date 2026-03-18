@@ -4,13 +4,7 @@ import { readFileSync } from "node:fs";
 import { basename } from "node:path";
 import type { App } from "@slack/bolt";
 import type { IncomingEvent } from "./gateway.js";
-
-function toMrkdwn(text: string): string {
-  return text
-    .replace(/\*\*(.+?)\*\*/gs, "*$1*")
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, "<$2|$1>")
-    .replace(/^#{1,6}\s+(.+)$/gm, "*$1*");
-}
+import { toMrkdwn } from "./format.js";
 
 export function createSlackMcpServer(slack: App, event: IncomingEvent) {
   const slackReply = tool(
