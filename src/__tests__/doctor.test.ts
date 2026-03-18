@@ -10,6 +10,7 @@ describe("doctor", () => {
 
   const ENV_KEYS = [
     "ANTHROPIC_API_KEY",
+    "CLAUDE_CODE_OAUTH_TOKEN",
     "SLACK_BOT_TOKEN",
     "SLACK_APP_TOKEN",
     "LINEAR_API_KEY",
@@ -43,17 +44,36 @@ describe("doctor", () => {
     return checks.find((c) => c.name === name);
   }
 
-  it("fails when ANTHROPIC_API_KEY is missing", async () => {
+  it("fails when neither API key nor OAuth token is set", async () => {
     const checks = await doctor(tmpDir);
-    const check = findCheck(checks, "ANTHROPIC_API_KEY");
+    const check = findCheck(checks, "Claude auth");
     expect(check?.status).toBe("fail");
+    expect(check?.detail).toContain("setup-token");
   });
 
   it("passes when ANTHROPIC_API_KEY is set", async () => {
     process.env.ANTHROPIC_API_KEY = "sk-test";
     const checks = await doctor(tmpDir);
-    const check = findCheck(checks, "ANTHROPIC_API_KEY");
+    const check = findCheck(checks, "Claude auth");
     expect(check?.status).toBe("ok");
+    expect(check?.detail).toContain("API key");
+  });
+
+  it("passes when CLAUDE_CODE_OAUTH_TOKEN is set", async () => {
+    process.env.CLAUDE_CODE_OAUTH_TOKEN = "sk-ant-oat01-test";
+    const checks = await doctor(tmpDir);
+    const check = findCheck(checks, "Claude auth");
+    expect(check?.status).toBe("ok");
+    expect(check?.detail).toContain("OAuth");
+  });
+
+  it("prefers OAuth token detail when both are set", async () => {
+    process.env.ANTHROPIC_API_KEY = "sk-test";
+    process.env.CLAUDE_CODE_OAUTH_TOKEN = "sk-ant-oat01-test";
+    const checks = await doctor(tmpDir);
+    const check = findCheck(checks, "Claude auth");
+    expect(check?.status).toBe("ok");
+    expect(check?.detail).toContain("OAuth");
   });
 
   it("warns when Slack tokens are missing", async () => {
@@ -146,7 +166,7 @@ describe("doctor", () => {
   it("returns checks for all integrations", async () => {
     const checks = await doctor(tmpDir);
     const names = checks.map((c) => c.name);
-    expect(names).toContain("ANTHROPIC_API_KEY");
+    expect(names).toContain("Claude auth");
     expect(names).toContain("op CLI");
     expect(names).toContain("OP_SERVICE_ACCOUNT_TOKEN");
     expect(names).toContain("Slack bot token");

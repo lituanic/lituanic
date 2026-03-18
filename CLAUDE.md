@@ -104,12 +104,21 @@ data/
 
 ## Production VPS deployment
 
+### Authentication
+
+Lituanic accepts either a Claude Pro/Max OAuth token or an Anthropic API key:
+
+- **OAuth token (recommended):** Run `claude setup-token` in a browser, store the resulting `sk-ant-oat01-...` token as `CLAUDE_CODE_OAUTH_TOKEN`. Uses your subscription instead of pay-per-use API billing.
+- **API key:** Set `ANTHROPIC_API_KEY` for traditional pay-per-use billing.
+
+The Agent SDK reads `CLAUDE_CODE_OAUTH_TOKEN` natively — no custom auth code in Lituanic.
+
 ### Secret management — 1Password first
 
 All secrets live in 1Password. Zero plaintext on disk.
 
 1. Create a 1Password service account with access to a "Lituanic" vault
-2. Store all secrets as items in the vault (Anthropic, Slack, Linear, GitHub)
+2. Store all secrets as items in the vault (Claude OAuth token or Anthropic API key, Slack, Linear, GitHub)
 3. On the VPS, `.env.op` contains `op://` URI references (not secret values)
 4. systemd runs `op run --env-file=.env.op -- bun start` to resolve secrets at process start
 5. The only plaintext secret is `OP_SERVICE_ACCOUNT_TOKEN` in a root-only systemd override

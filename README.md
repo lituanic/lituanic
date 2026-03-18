@@ -80,7 +80,7 @@ Your agent is live in Slack with access to: file system, shell, web search, suba
 ```
 $ lituanic doctor
 
-  ✓ ANTHROPIC_API_KEY: Set
+  ✓ Claude auth: OAuth token set (Claude Pro/Max subscription)
   ✓ op CLI: Installed
   ✓ OP_SERVICE_ACCOUNT_TOKEN: Set — 1Password secrets available
   ✓ Slack bot token: Set
@@ -323,17 +323,41 @@ export default defineConfig({
 });
 ```
 
-### Secrets
+### Authentication
+
+Two options — use either one:
+
+**Option A: Claude Pro/Max subscription (recommended)**
+
+Uses your existing subscription. No per-token API costs.
 
 ```bash
-# Development
+# On a machine with a browser (laptop), generate a 1-year token:
+claude setup-token
+# → Your OAuth token (valid for 1 year): sk-ant-oat01-...
+
+# Store in 1Password, then reference in .env.op:
+# CLAUDE_CODE_OAUTH_TOKEN=op://Lituanic/Claude/oauth-token
+
+# Or set directly:
+export CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-...
+bun start
+```
+
+**Option B: API key (pay-per-use)**
+
+```bash
 export ANTHROPIC_API_KEY=sk-ant-...
+bun start
+```
+
+Both options work with 1Password on VPS: `op run --env-file=.env.op -- bun start`
+
+### Other secrets
+
+```bash
 export SLACK_BOT_TOKEN=xoxb-...
 export SLACK_APP_TOKEN=xapp-...
-bun start
-
-# Production (1Password)
-op run --env-file=.env.op -- bun start
 ```
 
 ## Deploy
