@@ -1,6 +1,10 @@
 import { execSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 
-interface Check {
+const CMD_TIMEOUT_MS = 5_000;
+
+export interface Check {
   name: string;
   status: "ok" | "warn" | "fail";
   detail: string;
@@ -12,14 +16,14 @@ function env(key: string): boolean {
 
 function cmd(command: string): boolean {
   try {
-    execSync(command, { stdio: "ignore" });
+    execSync(command, { stdio: "ignore", timeout: CMD_TIMEOUT_MS });
     return true;
   } catch {
     return false;
   }
 }
 
-export async function doctor(): Promise<Check[]> {
+export async function doctor(dataDir?: string): Promise<Check[]> {
   const checks: Check[] = [];
 
   // Core
@@ -27,6 +31,23 @@ export async function doctor(): Promise<Check[]> {
     name: "ANTHROPIC_API_KEY",
     status: env("ANTHROPIC_API_KEY") ? "ok" : "fail",
     detail: env("ANTHROPIC_API_KEY") ? "Set" : "Missing — required for Claude",
+  });
+
+  // 1Password
+  const hasOp = cmd("op --version");
+  checks.push({
+    name: "op CLI",
+    status: hasOp ? "ok" : "warn",
+    detail: hasOp ? "Installed" : "Not found — install: https://1password.com/downloads/cli",
+  });
+
+  const hasOpToken = env("OP_SERVICE_ACCOUNT_TOKEN");
+  checks.push({
+    name: "OP_SERVICE_ACCOUNT_TOKEN",
+    status: hasOpToken ? "ok" : "warn",
+    detail: hasOpToken
+      ? "Set — 1Password secrets available"
+      : "Not set — using plaintext env vars (consider op run --env-file=.env.op)",
   });
 
   // Slack
@@ -47,14 +68,6 @@ export async function doctor(): Promise<Check[]> {
     name: "Linear API key",
     status: hasLinear ? "ok" : "warn",
     detail: hasLinear ? "Set" : "Missing — Linear integration disabled",
-  });
-
-  // 1Password
-  const hasOp = cmd("op --version");
-  checks.push({
-    name: "op CLI",
-    status: hasOp ? "ok" : "warn",
-    detail: hasOp ? "Installed" : "Not found — install: https://1password.com/downloads/cli",
   });
 
   // GitHub
@@ -90,6 +103,45 @@ export async function doctor(): Promise<Check[]> {
     status: env("GWS_CLIENT_ID") ? "ok" : "warn",
     detail: env("GWS_CLIENT_ID") ? "Set" : "Missing — Google Workspace disabled",
   });
+
+  // Backup health check
+  const resolvedDataDir = dataDir ?? "./data";
+  const markerFile = join(resolvedDataDir, ".last-backup");
+  if (existsSync(markerFile)) {
+    try {
+      const timestamp = readFileSync(markerFile, "utf-8").trim();
+      const lastBackup = new Date(timestamp);
+      if (isNaN(lastBackup.getTime())) {
+        throw new Error("Invalid date");
+      }
+      const hoursAgo = (Date.now() - lastBackup.getTime()) / (1000 * 60 * 60);
+      if (hoursAgo <= 48) {
+        checks.push({
+          name: "Backup",
+          status: "ok",
+          detail: `Last backup: ${timestamp} (${Math.floor(hoursAgo)}h ago)`,
+        });
+      } else {
+        checks.push({
+          name: "Backup",
+          status: "warn",
+          detail: `Last backup: ${timestamp} (${Math.floor(hoursAgo)}h ago — stale, check rclone cron)`,
+        });
+      }
+    } catch {
+      checks.push({
+        name: "Backup",
+        status: "warn",
+        detail: "Corrupt .last-backup marker file",
+      });
+    }
+  } else {
+    checks.push({
+      name: "Backup",
+      status: "warn",
+      detail: "No backup marker found — backups not configured (see deploy/backup.sh)",
+    });
+  }
 
   return checks;
 }

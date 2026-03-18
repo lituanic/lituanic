@@ -19,9 +19,10 @@ Lituanic owns only the Slack gateway wiring. Everything else is the Agent SDK or
 - `src/tools.ts` — Slack MCP tools (slack_reply, slack_react, slack_upload_file) — the only typed tools
 - `src/sessions.ts` — Slack thread → SDK session_id mapping
 - `src/memory.ts` — Daily logs + per-channel state
-- `src/doctor.ts` — Integration health checks (env vars, CLI availability)
+- `src/format.ts` — Markdown → Slack mrkdwn converter (shared by index + tools)
+- `src/doctor.ts` — Integration health checks (env vars, CLI availability, backup status)
 - `src/config.ts` — Zod config with opinionated defaults
-- `src/index.ts` — Daemon boot + typing indicator + notification forwarding + mrkdwn formatting
+- `src/index.ts` — Daemon boot + typing indicator + notification forwarding
 - `src/cli.ts` — CLI entry point (start, doctor, health, version)
 - `src/init.ts` — `lituanic init` scaffolding (creates project from template)
 
@@ -72,9 +73,19 @@ CLAUDE.md                  # This file (loaded by SDK at project root)
 │   ├── deploy.yml         # VPS deploy on push to main
 │   └── release.yml        # npm publish on GitHub release
 
+deploy/
+├── lituanic.service       # systemd unit (1Password + security hardening)
+├── backup.sh              # rclone data backup script (cron)
+├── backup.cron            # cron schedule for backup.sh
+├── setup.sh               # VPS bootstrap (installs bun, op, rclone)
+└── .env.op.template       # 1Password secret reference template
+
 src/
 ├── __tests__/             # Bun test suite
 │   ├── config.test.ts
+│   ├── doctor.test.ts
+│   ├── format.test.ts
+│   ├── init.test.ts
 │   ├── sessions.test.ts
 │   └── smoke.test.ts
 
@@ -90,3 +101,46 @@ data/
 - `@slack/bolt` — Slack gateway
 - `croner` — cron scheduler
 - `zod` — config validation + MCP tool schemas
+
+## Production VPS deployment
+
+### Secret management — 1Password first
+
+All secrets live in 1Password. Zero plaintext on disk.
+
+1. Create a 1Password service account with access to a "Lituanic" vault
+2. Store all secrets as items in the vault (Anthropic, Slack, Linear, GitHub)
+3. On the VPS, `.env.op` contains `op://` URI references (not secret values)
+4. systemd runs `op run --env-file=.env.op -- bun start` to resolve secrets at process start
+5. The only plaintext secret is `OP_SERVICE_ACCOUNT_TOKEN` in a root-only systemd override
+
+### Quick VPS setup
+
+```bash
+# Run the setup script on a fresh Ubuntu/Debian VPS
+bash deploy/setup.sh
+
+# Then set the 1Password bootstrap token
+sudo mkdir -p /etc/systemd/system/lituanic.service.d
+sudo tee /etc/systemd/system/lituanic.service.d/override.conf <<EOF
+[Service]
+Environment=OP_SERVICE_ACCOUNT_TOKEN=ops_YOUR_TOKEN
+EOF
+sudo chmod 600 /etc/systemd/system/lituanic.service.d/override.conf
+sudo systemctl daemon-reload
+sudo systemctl start lituanic
+```
+
+### Backups
+
+`deploy/backup.sh` runs via cron (daily 4 AM UTC), syncs `data/` to Google Drive via rclone.
+Writes a `.last-backup` marker file that `lituanic doctor` checks for staleness (>48h = warning).
+
+### What lives where
+
+| Layer | What it stores | Backup |
+|-------|---------------|--------|
+| GitHub | Code, skills, workflows, CLAUDE.md | Git history |
+| 1Password | All secrets | 1Password replication |
+| Google Drive | data/ (memory, daily logs, sessions) | rclone daily sync |
+| VPS | Runtime process only — fully reproducible | Disposable |
