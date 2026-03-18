@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.5] - 2026-03-18
+
+### Fixed
+- Markdown tables now render as preformatted code blocks in Slack — previously showed raw `| pipes |` since Slack has no table support
+- Bullet lists (`- item`) now convert to `• item` which Slack renders properly
+- Stronger screenshot upload instruction in Slack skill — agent now knows to always call `slack_upload_file` after saving any file, not just describe it in text
+
+### Changed
+- Slack skill now documents what mrkdwn does and does NOT support (no tables, no `**bold**`, no `[text](url)`, no `# headings`) so the agent prefers native Slack formatting
+
 ## [0.1.4] - 2026-03-18
 
 ### Added
