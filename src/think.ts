@@ -50,8 +50,8 @@ export async function think(options: ThinkOptions): Promise<ThinkResult> {
     if (channelMemory) append = `\n\n## Channel Context\n\n${channelMemory}`;
   }
 
-  // Effort: high for interactive, low for cron
-  const effort = event.source === "cron" ? "low" as const : "high" as const;
+  // Effort: medium for interactive (saves 20-40% output tokens vs high), low for cron
+  const effort = event.source === "cron" ? "low" as const : "medium" as const;
 
   const mcpServers: Record<string, any> = {};
   if (slack) mcpServers.slack = createSlackMcpServer(slack, event);
@@ -97,13 +97,22 @@ export async function think(options: ThinkOptions): Promise<ThinkResult> {
         "WebFetch", "WebSearch", "Agent", "Skill",
       ],
 
+      // Remove unused tool schemas from context (saves ~20K input tokens)
+      // Unlike allowedTools which only controls approval, disallowedTools
+      // actually removes the schemas from being sent to the model
+      disallowedTools: [
+        "NotebookEdit", "TodoRead", "TodoWrite",
+        "EnterPlanMode", "ExitPlanMode",
+        "EnterWorktree", "ExitWorktree",
+      ],
+
       // Autonomous operation
       permissionMode: "bypassPermissions",
       allowDangerouslySkipPermissions: true,
 
-      // Safety caps
-      maxTurns: config.maxTurns,
-      maxBudgetUsd: config.maxBudgetUsd,
+      // Safety caps: tighter limits for cron (routine checks don't need 50 turns)
+      maxTurns: event.source === "cron" ? Math.min(config.maxTurns, 15) : config.maxTurns,
+      maxBudgetUsd: event.source === "cron" ? Math.min(config.maxBudgetUsd, 1.0) : config.maxBudgetUsd,
 
       // Sandbox: SDK-native command isolation
       sandbox: config.sandbox
@@ -124,9 +133,13 @@ export async function think(options: ThinkOptions): Promise<ThinkResult> {
       },
 
       // Environment: pass through all env vars (secrets from op run)
-      env: Object.fromEntries(
-        Object.entries(process.env).filter((e): e is [string, string] => e[1] !== undefined),
-      ),
+      // Cost optimization: 200K context window (cheaper cache fills vs 1M default)
+      env: {
+        ...Object.fromEntries(
+          Object.entries(process.env).filter((e): e is [string, string] => e[1] !== undefined),
+        ),
+        CLAUDE_CODE_DISABLE_1M_CONTEXT: "1",
+      },
 
       // File checkpointing: free rewind on error
       enableFileCheckpointing: true,
