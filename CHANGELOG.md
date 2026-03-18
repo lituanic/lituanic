@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.4] - 2026-03-18
+
+### Added
+- `slack_upload_file` tool — your agent can now upload screenshots, PDFs, and any local file directly into a Slack thread instead of describing them in text
+- Markdown → Slack mrkdwn conversion now applies inside `slack_reply` — formatting works regardless of whether the agent uses the tool or the gateway posts the result
+
+### Changed
+- Default effort level for interactive queries lowered from `high` to `medium` — saves 20-40% on output tokens while maintaining quality for routine tasks
+- `disallowedTools` now removes unused tool schemas (`NotebookEdit`, `TodoRead`, `TodoWrite`, `EnterPlanMode`, `ExitPlanMode`, `EnterWorktree`, `ExitWorktree`) from context, reducing input tokens per turn
+- Context window capped at 200K (`CLAUDE_CODE_DISABLE_1M_CONTEXT=1`) — cheaper cache fills vs the 1M default
+- Cron jobs now have tighter safety caps: max 15 turns and $1.00 budget (down from the global defaults)
+
 ## [0.1.3] - 2026-03-17
 
 ### Added
@@ -9,7 +21,7 @@ All notable changes to this project will be documented in this file.
   - On start: `session: <id> model: <name> tools: <count>`
   - Per tool call: `↳ ToolName: preview [in:N out:N]` with per-turn token counts
   - On completion: `→ success | 7t | 1240ms (api:980ms) | in:2341 out:456 cache↩:1200 | claude-sonnet-4-6 $0.1659`
-- `ThinkResult` now exposes `durationMs`, `durationApiMs`, `usage`, and `modelUsage` for callers
+- The result object now exposes duration, API latency, token breakdown, and per-model cost — useful if you're building on top of Lituanic and want to surface these metrics
 
 ## [0.1.2] - 2026-03-17
 
