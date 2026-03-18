@@ -16,7 +16,7 @@ Lituanic owns only the Slack gateway wiring. Everything else is the Agent SDK or
 
 - `src/gateway.ts` — Slack Bolt + webhooks (with Linear state machine) + cron + per-channel queue
 - `src/think.ts` — Thin `query()` wrapper: session resume, effort routing, canUseTool, progress streaming, debug logging (model, tokens, latency, cost)
-- `src/tools.ts` — Slack MCP tools (slack_reply, slack_react) — the only typed tools
+- `src/tools.ts` — Slack MCP tools (slack_reply, slack_react, slack_upload_file) — the only typed tools
 - `src/sessions.ts` — Slack thread → SDK session_id mapping
 - `src/memory.ts` — Daily logs + per-channel state
 - `src/format.ts` — Markdown → Slack mrkdwn converter (shared by index + tools)
@@ -47,7 +47,7 @@ Adding an integration = writing a SKILL.md + checking env vars in doctor.ts.
 
 | Integration | How it works | Env vars needed |
 |-------------|-------------|-----------------|
-| Slack | MCP tools (slack_reply, slack_react) + Bolt gateway | `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN` |
+| Slack | MCP tools (slack_reply, slack_react, slack_upload_file) + Bolt gateway | `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN` |
 | Linear | SKILL.md + GraphQL API via curl | `LINEAR_API_KEY` |
 | 1Password | SKILL.md + `op` CLI via Bash | `OP_SERVICE_ACCOUNT_TOKEN` |
 | Google Workspace | SKILL.md + `gws` CLI via Bash | `GWS_CLIENT_ID`, GWS credentials |

@@ -52,4 +52,34 @@ describe("toMrkdwn", () => {
   it("does not convert single asterisks", () => {
     expect(toMrkdwn("*already italic*")).toBe("*already italic*");
   });
+
+  it("converts bullet lists - item to • item", () => {
+    expect(toMrkdwn("- first\n- second")).toBe("• first\n• second");
+  });
+
+  it("converts bullet lists with * marker", () => {
+    expect(toMrkdwn("* one\n* two")).toBe("• one\n• two");
+  });
+
+  it("preserves indented bullet lists", () => {
+    expect(toMrkdwn("  - nested")).toBe("  • nested");
+  });
+
+  it("converts markdown tables to code blocks", () => {
+    const input = "| Name | Value |\n|---|---|\n| foo | 1 |";
+    const result = toMrkdwn(input);
+    expect(result).toContain("```");
+    expect(result).toContain("| Name | Value |");
+    expect(result).toContain("| foo | 1 |");
+    // Separator row should be stripped
+    expect(result).not.toContain("|---|---|");
+  });
+
+  it("converts multi-row tables", () => {
+    const input = "| A | B |\n|---|---|\n| 1 | 2 |\n| 3 | 4 |";
+    const result = toMrkdwn(input);
+    expect(result).toContain("```");
+    expect(result).toContain("| 1 | 2 |");
+    expect(result).toContain("| 3 | 4 |");
+  });
 });

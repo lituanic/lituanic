@@ -12,13 +12,13 @@ This is what smart contracts promised — code-first, zero-human operations. Lit
 
 Lituanic is a thin wiring layer on the Claude Agent SDK. The SDK does all the hard work — agent loop, tool calling, sessions, compaction, subagents, sandboxing. Lituanic wires it to Slack and adds opinionated defaults. When Anthropic ships an SDK update, Lituanic gets better for free.
 
-**~1,400 lines of TypeScript. 6 built-in integrations. 3 dependencies.**
+**~1,500 lines of TypeScript. 6 built-in integrations. 3 dependencies.**
 
 ## Built-in integrations
 
 | Integration | How | Env vars |
 |---|---|---|
-| **Slack** | Typed MCP tools + Bolt gateway | `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN` |
+| **Slack** | Typed MCP tools (reply, react, upload) + Bolt gateway | `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN` |
 | **Linear** | SKILL.md + GraphQL API via curl | `LINEAR_API_KEY` |
 | **1Password** | SKILL.md + `op` CLI via Bash | `OP_SERVICE_ACCOUNT_TOKEN` |
 | **Google Workspace** | SKILL.md + `gws` CLI via Bash | `GWS_CLIENT_ID` + credentials |
@@ -41,6 +41,7 @@ Create a Slack app at [api.slack.com/apps](https://api.slack.com/apps):
    - `im:history` — read DM history
    - `im:read` — open DMs
    - `reactions:write` — add emoji reactions
+   - `files:write` — upload files (screenshots, PDFs)
 4. **Event Subscriptions** → Enable Events → Subscribe to bot events:
    - `app_mention` — triggers on @mentions in channels
    - `message.im` — triggers on direct messages
@@ -127,7 +128,7 @@ No code change. No restart. The agent immediately knows how to deploy.
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                       lituanic (~1,400 LOC)                   │
+│                       lituanic (~1,500 LOC)                   │
 │                                                              │
 │  ┌─────────────┐  ┌─────────────┐  ┌──────────────────────┐ │
 │  │ gateway.ts  │  │ sessions.ts │  │ Claude Agent SDK     │ │
@@ -143,7 +144,7 @@ No code change. No restart. The agent immediately knows how to deploy.
 │  │             │  │             │  │ • Session persist     │ │
 │  │ slack_reply │  │ env checks  │  │ • Compaction          │ │
 │  │ slack_react │  │ CLI checks  │  │ • Subagents           │ │
-│  │ (MCP tools) │  │ health      │  │ • Sandbox             │ │
+│  │ slack_up.. │  │ health      │  │ • Sandbox             │ │
 │  └─────────────┘  └─────────────┘  │ • File checkpointing │ │
 │                                    │ • Thinking            │ │
 │  .claude/skills/ (loaded by SDK)   │ • Permissions         │ │
@@ -161,16 +162,16 @@ No code change. No restart. The agent immediately knows how to deploy.
 | File | LOC | Purpose |
 |---|---|---|
 | `gateway.ts` | 300 | Slack Bolt + webhooks (Linear state machine) + cron + per-channel queue |
-| `think.ts` | 260 | `query()` wrapper: session resume, effort routing, canUseTool, progress, debug logging |
-| `index.ts` | 223 | Daemon boot, typing indicator, notification forwarding, mrkdwn formatting |
+| `think.ts` | 260 | `query()` wrapper: session resume, effort routing, cost optimization, canUseTool, progress, debug logging |
+| `index.ts` | 233 | Daemon boot, typing indicator, notification forwarding, mrkdwn formatting |
 | `init.ts` | 158 | `lituanic init` scaffolding |
 | `config.ts` | 137 | Zod config with opinionated defaults |
 | `doctor.ts` | 117 | Integration health checks |
 | `cli.ts` | 87 | CLI: start, init, doctor, health, version |
 | `sessions.ts` | 75 | Slack thread to SDK session_id mapping |
 | `memory.ts` | 65 | Daily logs + per-channel state |
-| `tools.ts` | 69 | Slack MCP tools (only typed integration) |
-| **Total** | **~1,491** | |
+| `tools.ts` | 83 | Slack MCP tools: reply, react, upload (only typed integration) |
+| **Total** | **~1,515** | |
 
 ### What the Agent SDK owns (delegated)
 
@@ -191,7 +192,7 @@ Every time Anthropic ships an SDK update, Lituanic gets better for free.
 | `canUseTool` callback | Inline security, no separate module |
 | File checkpointing + rewind | Free rollback on error |
 | Adaptive thinking | Automatic on Opus/Sonnet 4.6 |
-| Effort control (low/medium/high/max) | One line: `effort: "high"` |
+| Effort control (low/medium/high/max) | One line: `effort: "medium"` |
 | Environment passthrough | `env: process.env` |
 | Model fallback | `fallbackModel: "claude-haiku-4-5"` |
 | Notification hooks | Forward to Slack |
@@ -206,6 +207,7 @@ Every time Anthropic ships an SDK update, Lituanic gets better for free.
                     ────────────────────         ──────────────────────────────
 Slack               ✓ slack_reply
                     ✓ slack_react
+                    ✓ slack_upload_file
 Linear                                           ✓ GraphQL API via curl
 1Password                                        ✓ op CLI
 Google Workspace                                 ✓ gws CLI
@@ -213,7 +215,7 @@ Browser                                          ✓ agent-browser CLI
 GitHub                                           ✓ gh CLI
 ```
 
-**Why Slack gets typed tools:** wrong-channel prevention, thread enforcement, Slack markdown formatting. Mistakes are immediately visible to humans.
+**Why Slack gets typed tools:** wrong-channel prevention, thread enforcement, mrkdwn formatting, file uploads. Mistakes are immediately visible to humans.
 
 **Why everything else is SKILL.md + CLI:** the `linear` CLI, `op` CLI, and `googleworkspace` CLI are well-designed, typed, maintained by their respective companies. When they ship updates, our agent uses new features immediately with zero code changes. We maintain knowledge (SKILL.md), not integration code.
 
@@ -344,7 +346,7 @@ Health check built in: `GET :9200/health` returns JSON.
 
 | | Pi-mom | Lituanic |
 |---|---|---|
-| Codebase | Closed-source npm + 8 monkey patches | ~1,400 LOC, open source |
+| Codebase | Closed-source npm + 8 monkey patches | ~1,500 LOC, open source |
 | Concurrency | Serial per channel, no subagents | SDK subagents, parallel work |
 | Sessions | context.jsonl (custom, fragile) | SDK session persist + resume |
 | Integrations | Custom extensions in host process | Skills + CLI via Bash |
@@ -365,7 +367,7 @@ Health check built in: `GET :9200/health` returns JSON.
 | | OpenClaw | Lituanic |
 |---|---|---|
 | Scope | 20+ channels, 5400+ skills, voice, canvas | Slack + 6 built-in skills |
-| Codebase | 19,800+ commits | ~1,400 LOC |
+| Codebase | 19,800+ commits | ~1,500 LOC |
 | Security | 500+ open issues | Minimal surface, single tenant |
 | Design | Everything for everyone | One founder, one company |
 
