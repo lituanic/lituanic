@@ -175,14 +175,14 @@ No code change. No restart. The agent immediately knows how to deploy.
 | `think.ts` | 260 | `query()` wrapper: session resume, effort routing, cost optimization, canUseTool, progress, debug logging |
 | `index.ts` | 210 | Daemon boot, typing indicator, notification forwarding |
 | `init.ts` | 184 | `lituanic init` scaffolding (config, .env, .env.op, .gitignore) |
-| `doctor.ts` | 169 | Integration health checks (env vars, CLIs, 1Password, backup status) |
+| `doctor.ts` | 175 | Integration health checks (env vars, CLIs, 1Password, backup status) |
 | `config.ts` | 137 | Zod config with opinionated defaults |
 | `cli.ts` | 87 | CLI: start, init, doctor, health, version |
 | `sessions.ts` | 75 | Slack thread to SDK session_id mapping |
 | `memory.ts` | 65 | Daily logs + per-channel state |
 | `tools.ts` | 63 | Slack MCP tools: reply, react, upload (only typed integration) |
 | `format.ts` | 23 | Markdown → Slack mrkdwn converter (shared by index + tools) |
-| **Total** | **~1,573** | |
+| **Total** | **~1,579** | |
 
 ### What the Agent SDK owns (delegated)
 
