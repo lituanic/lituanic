@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.4] - 2026-03-18
+
+### Added
+- `slack_upload_file` tool — your agent can now upload screenshots, PDFs, and any local file directly into a Slack thread instead of describing them in text
+- Markdown → Slack mrkdwn conversion now applies inside `slack_reply` — formatting works regardless of whether the agent uses the tool or the gateway posts the result
+
+### Changed
+- Default effort level for interactive queries lowered from `high` to `medium` — saves 20-40% on output tokens while maintaining quality for routine tasks
+- `disallowedTools` now removes unused tool schemas (`NotebookEdit`, `TodoRead`, `TodoWrite`, `EnterPlanMode`, `ExitPlanMode`, `EnterWorktree`, `ExitWorktree`) from context, reducing input tokens per turn
+- Context window capped at 200K (`CLAUDE_CODE_DISABLE_1M_CONTEXT=1`) — cheaper cache fills vs the 1M default
+- Cron jobs now have tighter safety caps: max 15 turns and $1.00 budget (down from the global defaults)
+
 ## [0.1.3] - 2026-03-17
 
 ### Added

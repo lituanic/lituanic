@@ -161,7 +161,7 @@ No code change. No restart. The agent immediately knows how to deploy.
 | File | LOC | Purpose |
 |---|---|---|
 | `gateway.ts` | 300 | Slack Bolt + webhooks (Linear state machine) + cron + per-channel queue |
-| `think.ts` | 247 | `query()` wrapper: session resume, effort routing, canUseTool, progress, debug logging |
+| `think.ts` | 260 | `query()` wrapper: session resume, effort routing, canUseTool, progress, debug logging |
 | `index.ts` | 223 | Daemon boot, typing indicator, notification forwarding, mrkdwn formatting |
 | `init.ts` | 158 | `lituanic init` scaffolding |
 | `config.ts` | 137 | Zod config with opinionated defaults |
@@ -169,8 +169,8 @@ No code change. No restart. The agent immediately knows how to deploy.
 | `cli.ts` | 87 | CLI: start, init, doctor, health, version |
 | `sessions.ts` | 75 | Slack thread to SDK session_id mapping |
 | `memory.ts` | 65 | Daily logs + per-channel state |
-| `tools.ts` | 40 | Slack MCP tools (only typed integration) |
-| **Total** | **~1,449** | |
+| `tools.ts` | 69 | Slack MCP tools (only typed integration) |
+| **Total** | **~1,491** | |
 
 ### What the Agent SDK owns (delegated)
 
