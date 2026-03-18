@@ -26,13 +26,23 @@ const pkg = JSON.parse(readFileSync(join(import.meta.dir, "..", "package.json"),
  * Claude outputs GitHub-flavored markdown; Slack needs its own dialect.
  */
 function toMrkdwn(text: string): string {
+  // Convert markdown tables to preformatted code blocks (Slack has no table support)
+  text = text.replace(
+    /((?:^\|.+\|$\n?)+)/gm,
+    (table) => {
+      const rows = table.split("\n").filter((r) => r.trim() && !/^\|[\s\-:|]+\|$/.test(r));
+      return "```\n" + rows.join("\n") + "\n```\n";
+    },
+  );
   return text
     // Bold: **text** → *text*
     .replace(/\*\*(.+?)\*\*/gs, "*$1*")
     // Links: [text](url) → <url|text>
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, "<$2|$1>")
     // Headings: ## Title → *Title*
-    .replace(/^#{1,6}\s+(.+)$/gm, "*$1*");
+    .replace(/^#{1,6}\s+(.+)$/gm, "*$1*")
+    // Bullet lists: - item → • item
+    .replace(/^(\s*)[-*]\s+/gm, "$1• ");
 }
 
 interface LituanicDaemon {
